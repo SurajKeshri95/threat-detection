@@ -5,7 +5,7 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, Legend, AreaChart, Area
 } from "recharts";
 
-const API = "https://threat-detection-api-fqo5.onrender.com/health";
+const API = "https://threat-detection-api-fqo5.onrender.com";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Circular+Std:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap');
