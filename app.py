@@ -5,17 +5,22 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+import urllib.parse
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+database_url = os.getenv("DATABASE_URL", "")
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(
-    os.getenv("DATABASE_URL"),
+    database_url,
     pool_pre_ping=True,
-    pool_recycle=300,
-    connect_args={"sslmode": "require"}
+    pool_recycle=300
+)
 )
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
