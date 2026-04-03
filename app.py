@@ -9,7 +9,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=[
+    "http://localhost:3000",
+    "https://coruscating-wisp-125948.netlify.app"
+])
 
 engine = create_engine(os.getenv("DATABASE_URL"))
 
