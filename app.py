@@ -1,5 +1,5 @@
-import os
 import random
+import os
 import pickle
 import numpy as np
 from flask import Flask, request, jsonify
@@ -155,7 +155,6 @@ def predict():
             # For Kaggle-only accounts use label directly with realistic score
             label = account.get('label', 'legit')
             if label == 'bot':
-                import random
                 threat_score = round(random.uniform(72, 96), 1)
             else:
                 threat_score = round(random.uniform(8, 35), 1)
