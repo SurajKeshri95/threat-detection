@@ -159,54 +159,7 @@ const FEATURES = [
   { num: '09', name: 'no_description', desc: 'Binary: humans write bios. Bots consistently skip the description field.', imp: 0.013 },
   { num: '10', name: 'is_verified_int', desc: 'Verified accounts are almost exclusively legitimate users. Definitive signal.', imp: 0.007 },
 ];
-
-export default function App() {
-  const [page, setPage] = useState('dashboard');
-  const [stats, setStats] = useState(null);
-  const [accounts, setAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [username, setUsername] = useState('');
-  const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState('');
-  const [recentScans, setRecentScans] = useState([]);
-  const [time, setTime] = useState(new Date());
-  const inputRef = useRef(null);
-
-  useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      await axios.get(`${API}/health`);
-      const [s, a] = await Promise.all([axios.get(`${API}/stats`), axios.get(`${API}/accounts`)]);
-      setStats(s.data); setAccounts(a.data);
-    } catch { setTimeout(loadData, 8000); }
-    finally { setLoading(false); }
-  }, []);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const handleScan = async () => {
-    if (!username.trim()) return;
-    setScanning(true); setError(''); setResult(null);
-    try {
-      const res = await axios.post(`${API}/predict`, { username: username.trim() });
-      setResult(res.data);
-      setRecentScans(prev => [res.data, ...prev.filter(r => r.username !== res.data.username)].slice(0, 5));
-    } catch (e) { setError(e.response?.data?.error || 'Account not found in database'); }
-    setScanning(false);
-  };
-
-  const pieData = stats ? [{ name: 'Bots', value: stats.total_bots }, { name: 'Legit', value: stats.total_accounts - stats.total_bots }] : [];
-  const riskData = [
-    { name: 'HIGH', value: accounts.filter(a => (a.threat_score || 0) >= 70).length, fill: 'var(--red)' },
-    { name: 'MED', value: accounts.filter(a => (a.threat_score || 0) >= 40 && (a.threat_score || 0) < 70).length, fill: 'var(--amber)' },
-    { name: 'LOW', value: accounts.filter(a => (a.threat_score || 0) < 40).length, fill: 'var(--cyan)' },
-  ];
-  const areaData = accounts.slice(0, 24).map((a, i) => ({ i: i + 1, score: a.threat_score || 0 }));
-
-  const ScanBlock = () => (
+const ScanBlock = () => (
     <div className="sw">
       <div className="sir">
         <div className="siw">
@@ -258,6 +211,53 @@ export default function App() {
       )}
     </div>
   );
+export default function App() {
+  const [page, setPage] = useState('dashboard');
+  const [stats, setStats] = useState(null);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const [recentScans, setRecentScans] = useState([]);
+  const [time, setTime] = useState(new Date());
+  const inputRef = useRef(null);
+
+  useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      await axios.get(`${API}/health`);
+      const [s, a] = await Promise.all([axios.get(`${API}/stats`), axios.get(`${API}/accounts`)]);
+      setStats(s.data); setAccounts(a.data);
+    } catch { setTimeout(loadData, 8000); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleScan = async () => {
+    if (!username.trim()) return;
+    setScanning(true); setError(''); setResult(null);
+    try {
+      const res = await axios.post(`${API}/predict`, { username: username.trim() });
+      setResult(res.data);
+      setRecentScans(prev => [res.data, ...prev.filter(r => r.username !== res.data.username)].slice(0, 5));
+    } catch (e) { setError(e.response?.data?.error || 'Account not found in database'); }
+    setScanning(false);
+  };
+
+  const pieData = stats ? [{ name: 'Bots', value: stats.total_bots }, { name: 'Legit', value: stats.total_accounts - stats.total_bots }] : [];
+  const riskData = [
+    { name: 'HIGH', value: accounts.filter(a => (a.threat_score || 0) >= 70).length, fill: 'var(--red)' },
+    { name: 'MED', value: accounts.filter(a => (a.threat_score || 0) >= 40 && (a.threat_score || 0) < 70).length, fill: 'var(--amber)' },
+    { name: 'LOW', value: accounts.filter(a => (a.threat_score || 0) < 40).length, fill: 'var(--cyan)' },
+  ];
+  const areaData = accounts.slice(0, 24).map((a, i) => ({ i: i + 1, score: a.threat_score || 0 }));
+
+  
 
   const renderPage = () => {
     if (loading) return <div className="lw"><div className="ls" /><div className="lt">INITIALIZING THREAT MATRIX...</div></div>;
@@ -312,7 +312,16 @@ export default function App() {
             </ResponsiveContainer>
           </div>
         </div>
-        <ScanBlock />
+        <ScanBlock
+  username={username}
+  setUsername={setUsername}
+  scanning={scanning}
+  handleScan={handleScan}
+  error={error}
+  result={result}
+  recentScans={recentScans}
+  inputRef={inputRef}
+/>
         <div style={{ marginBottom: 20 }}>
           <div className="ct" style={{ marginBottom: 14 }}>FLAGGED ACCOUNTS — TOP THREATS</div>
           {accounts.length === 0 ? <div className="es"><div className="ei">◎</div><div className="et2">NO SCORED ACCOUNTS</div></div> : (
@@ -338,7 +347,16 @@ export default function App() {
           <div className="pt">THREAT SCANNER <span className="pt-acc">ML POWERED</span></div>
           <div className="ps">// xgboost classifier · 85%+ accuracy · real-time predictions</div>
         </div>
-        <ScanBlock />
+        <ScanBlock
+  username={username}
+  setUsername={setUsername}
+  scanning={scanning}
+  handleScan={handleScan}
+  error={error}
+  result={result}
+  recentScans={recentScans}
+  inputRef={inputRef}
+/>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div className="cc">
             <div className="ct">HOW SCORING WORKS</div>
